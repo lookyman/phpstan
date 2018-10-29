@@ -11,9 +11,7 @@ env:
 matrix:
   allow_failures:
     - php: master
-      env: dependencies=lowest
-    - php: master
-      env: dependencies=highest
+    - stage: phar
 
 before_script:
   - if php --ri xdebug >/dev/null; then phpenv config-rm xdebug.ini; fi
@@ -22,8 +20,18 @@ install:
   - if [ "$dependencies" = "lowest" ]; then composer update --prefer-lowest --no-interaction; fi
   - if [ "$dependencies" = "highest" ]; then composer update --no-interaction; fi
 
-script:
-  - vendor/bin/phing
+jobs:
+  include:
+    - script: vendor/bin/phing
+    - stage: phar
+      #if: env(TRAVIS_PHP_VERSION) = "7.1" && env(dependencies) = "highest" && branch = master
+      script:
+        - echo $TRAVIS_PHP_VERSION
+        - echo $dependencies
+      #  - git clone https://github.com/phpstan/phpstan-compiler && cd phpstan-compiler && ./run-e2e-tests.sh $TRAVIS_COMMIT
+      #after_success:
+      #  - commit generated phar to phpstan-shim
+#
 
 cache:
   directories:
