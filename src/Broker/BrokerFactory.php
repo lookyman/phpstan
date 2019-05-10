@@ -10,6 +10,7 @@ use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension
 use PHPStan\Reflection\FunctionReflectionFactory;
 use PHPStan\Reflection\Php\PhpClassReflectionExtension;
 use PHPStan\Reflection\PhpDefect\PhpDefectClassReflectionExtension;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Reflection\SignatureMap\SignatureMapProvider;
 use PHPStan\Type\FileTypeMapper;
 
@@ -53,7 +54,8 @@ class BrokerFactory
 			$this->container->getByType(AnonymousClassNameHelper::class),
 			$this->container->getByType(Parser::class),
 			$relativePathHelper,
-			$this->container->getParameter('universalObjectCratesClasses')
+			$this->container->getParameter('universalObjectCratesClasses'),
+			$this->container->getByType(ReflectionProvider::class)
 		);
 	}
 

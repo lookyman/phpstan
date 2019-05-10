@@ -13,6 +13,7 @@ use PHPStan\Node\VirtualNode;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Tests\AssertionClassMethodTypeSpecifyingExtension;
 use PHPStan\Tests\AssertionClassStaticMethodTypeSpecifyingExtension;
 use PHPStan\TrinaryLogic;
@@ -1780,7 +1781,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 		string $expression
 	): void
 	{
-		require_once __DIR__ . '/data/function-definitions.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/function-definitions.php');
 		$this->assertTypes(
 			__DIR__ . '/data/deducted-types.php',
 			$description,
@@ -3542,7 +3543,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 		string $expression
 	): void
 	{
-		require_once __DIR__ . '/data/functionPhpDocs.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/functionPhpDocs.php');
 		$this->assertTypes(
 			__DIR__ . '/data/functionPhpDocs.php',
 			$description,
@@ -6938,7 +6939,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 		string $expression
 	): void
 	{
-		require_once __DIR__ . '/data/inheritdoc-from-interface2-definition.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/inheritdoc-from-interface2-definition.php');
 		$this->assertTypes(
 			__DIR__ . '/data/inheritdoc-from-interface2.php',
 			$description,
@@ -6993,8 +6994,8 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 		string $expression
 	): void
 	{
-		require_once __DIR__ . '/data/inheritdoc-from-trait2-definition.php';
-		require_once __DIR__ . '/data/inheritdoc-from-trait2-definition2.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/inheritdoc-from-trait2-definition.php');
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/inheritdoc-from-trait2-definition2.php');
 		$this->assertTypes(
 			__DIR__ . '/data/inheritdoc-from-trait2.php',
 			$description,
@@ -9171,7 +9172,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 	{
 		$assertType = function (Scope $scope) use ($expression, $description, $evaluatedPointExpression): void {
 			/** @var \PhpParser\Node\Stmt\Expression $expressionNode */
-			$expressionNode = $this->getParser()->parseString(sprintf('<?php %s;', $expression))[0];
+			$expressionNode = $this->getParser()->parse(sprintf('<?php %s;', $expression))[0];
 			$type = $scope->getType($expressionNode->expr);
 			$this->assertTypeDescribe(
 				$description,
@@ -9236,7 +9237,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 		$resolver = new NodeScopeResolver(
 			$broker,
 			$this->getParser(),
-			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class)),
+			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class), self::getContainer()->getByType(ReflectionProvider::class)),
 			$fileHelper,
 			$typeSpecifier,
 			true,
@@ -9257,8 +9258,13 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 			__DIR__ . '/data/anonymous-class-name-in-trait-trait.php',
 		]));
 
+		$contents = file_get_contents($file);
+		if ($contents === false) {
+			throw new \PHPStan\ShouldNotHappenException();
+		}
+
 		$resolver->processNodes(
-			$this->getParser()->parseFile($file),
+			$this->getParser()->parse($contents),
 			$this->createScopeFactory($broker, $typeSpecifier, $dynamicConstantNames)->create(ScopeContext::create($file)),
 			$callback
 		);

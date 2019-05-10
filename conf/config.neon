@@ -31,8 +31,7 @@ parameters:
 	ignoreErrors: []
 	internalErrorsCountLimit: 50
 	cache:
-	    nodesByFileCountMax: 512
-	    nodesByStringCountMax: 512
+		nodesByStringCountMax: 512
 	reportUnmatchedIgnoredErrors: true
 	scopeClass: PHPStan\Analyser\Scope
 	universalObjectCratesClasses:
@@ -99,8 +98,9 @@ services:
 	-
 		class: PhpParser\NodeVisitor\NameResolver
 
-	-
+	phpParser:
 		class: PhpParser\Parser\Php7
+		autowired: no
 
 	-
 		class: PhpParser\PrettyPrinter\Standard
@@ -196,7 +196,6 @@ services:
 		class: PHPStan\Parser\CachedParser
 		arguments:
 			originalParser: @directParser
-			cachedNodesByFileCountMax: %cache.nodesByFileCountMax%
 			cachedNodesByStringCountMax: %cache.nodesByStringCountMax%
 
 	-
@@ -629,6 +628,8 @@ services:
 
 	directParser:
 		class: PHPStan\Parser\DirectParser
+		arguments:
+			parser: @phpParser
 		autowired: no
 
 	registry:

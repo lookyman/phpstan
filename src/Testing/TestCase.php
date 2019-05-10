@@ -30,6 +30,7 @@ use PHPStan\Reflection\Php\PhpMethodReflection;
 use PHPStan\Reflection\Php\PhpMethodReflectionFactory;
 use PHPStan\Reflection\Php\UniversalObjectCratesClassReflectionExtension;
 use PHPStan\Reflection\PhpDefect\PhpDefectClassReflectionExtension;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Reflection\SignatureMap\SignatureMapProvider;
 use PHPStan\Type\FileTypeMapper;
 use PHPStan\Type\Type;
@@ -40,12 +41,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 	/** @var \Nette\DI\Container|null */
 	private static $container;
 
+	/** @var string */
+	public static $reflectionBackend = 'native';
+
 	public static function getContainer(): \Nette\DI\Container
 	{
 		if (self::$container === null) {
 			$rootDir = __DIR__ . '/../..';
 			$containerFactory = new ContainerFactory($rootDir);
 			self::$container = $containerFactory->create($rootDir . '/tmp', [
+				$containerFactory->getConfigDirectory() . '/reflection.' . self::$reflectionBackend . '.neon',
 				$containerFactory->getConfigDirectory() . '/config.level7.neon',
 			], []);
 		}
@@ -142,7 +147,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 		};
 		$phpDocStringResolver = self::getContainer()->getByType(PhpDocStringResolver::class);
 		$currentWorkingDirectory = $this->getCurrentWorkingDirectory();
-		$fileTypeMapper = new FileTypeMapper($parser, $phpDocStringResolver, $cache, new AnonymousClassNameHelper(new FileHelper($currentWorkingDirectory), new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class));
+		$fileTypeMapper = new FileTypeMapper($parser, $phpDocStringResolver, $cache, new AnonymousClassNameHelper(new FileHelper($currentWorkingDirectory), new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class), self::getContainer()->getByType(ReflectionProvider::class));
 		$annotationsMethodsClassReflectionExtension = new AnnotationsMethodsClassReflectionExtension($fileTypeMapper);
 		$annotationsPropertiesClassReflectionExtension = new AnnotationsPropertiesClassReflectionExtension($fileTypeMapper);
 		$signatureMapProvider = self::getContainer()->getByType(SignatureMapProvider::class);
@@ -231,13 +236,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 			array_merge($dynamicStaticMethodReturnTypeExtensions, $this->getDynamicStaticMethodReturnTypeExtensions()),
 			array_merge($tagToService(self::getContainer()->findByTag(BrokerFactory::DYNAMIC_FUNCTION_RETURN_TYPE_EXTENSION_TAG)), $this->getDynamicFunctionReturnTypeExtensions()),
 			$functionReflectionFactory,
-			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $cache, $anonymousClassNameHelper, self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class)),
+			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $cache, $anonymousClassNameHelper, self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class), self::getContainer()->getByType(ReflectionProvider::class)),
 			$signatureMapProvider,
 			self::getContainer()->getByType(Standard::class),
 			$anonymousClassNameHelper,
 			self::getContainer()->getByType(Parser::class),
 			new FuzzyRelativePathHelper($this->getCurrentWorkingDirectory(), DIRECTORY_SEPARATOR, []),
-			self::getContainer()->parameters['universalObjectCratesClasses']
+			self::getContainer()->parameters['universalObjectCratesClasses'],
+			self::getContainer()->getByType(ReflectionProvider::class)
 		);
 		$methodReflectionFactory->broker = $broker;
 
@@ -329,6 +335,11 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 	public function getFileHelper(): FileHelper
 	{
 		return self::getContainer()->getByType(FileHelper::class);
+	}
+
+	public function getReflectionProvider(): ReflectionProvider
+	{
+		return self::getContainer()->getByType(ReflectionProvider::class);
 	}
 
 	protected function skipIfNotOnWindows(): void

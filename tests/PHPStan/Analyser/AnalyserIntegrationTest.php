@@ -123,7 +123,7 @@ class AnalyserIntegrationTest extends \PHPStan\Testing\TestCase
 		if (!$signatureMapProvider->hasFunctionSignature('bcompiler_write_file')) {
 			$this->fail();
 		}
-		require_once __DIR__ . '/data/custom-function-in-signature-map.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/custom-function-in-signature-map.php');
 		$errors = $this->runAnalyse(__DIR__ . '/data/custom-function-in-signature-map.php');
 		$this->assertCount(0, $errors);
 	}

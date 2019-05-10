@@ -2132,7 +2132,11 @@ class NodeScopeResolver
 			if (!isset($this->analysedFiles[$fileName])) {
 				continue;
 			}
-			$parserNodes = $this->parser->parseFile($fileName);
+			$contents = file_get_contents($fileName);
+			if ($contents === false) {
+				throw new \PHPStan\ShouldNotHappenException();
+			}
+			$parserNodes = $this->parser->parse($contents);
 			$this->processNodesForTraitUse($parserNodes, $traitReflection, $classScope, $nodeCallback);
 		}
 	}

@@ -2,19 +2,14 @@
 
 namespace PHPStan\Parser;
 
-interface Parser
+use PhpParser\ErrorHandler;
+
+interface Parser extends \PhpParser\Parser
 {
 
 	/**
-	 * @param string $file path to a file to parse
 	 * @return \PhpParser\Node[]
 	 */
-	public function parseFile(string $file): array;
-
-	/**
-	 * @param string $sourceCode
-	 * @return \PhpParser\Node[]
-	 */
-	public function parseString(string $sourceCode): array;
+	public function parse(string $code, ?ErrorHandler $errorHandler = null): array;
 
 }

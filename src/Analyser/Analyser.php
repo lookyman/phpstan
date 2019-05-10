@@ -138,7 +138,11 @@ class Analyser
 
 				if (is_file($file)) {
 					$parserBenchmarkTime = $this->benchmarkStart();
-					$parserNodes = $this->parser->parseFile($file);
+					$contents = file_get_contents($file);
+					if ($contents === false) {
+						throw new \PHPStan\ShouldNotHappenException();
+					}
+					$parserNodes = $this->parser->parse($contents);
 					$this->benchmarkEnd($parserBenchmarkTime, 'parser');
 
 					$scopeBenchmarkTime = $this->benchmarkStart();

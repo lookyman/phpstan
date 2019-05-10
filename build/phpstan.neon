@@ -20,6 +20,7 @@ parameters:
 		- '#^Only numeric types are allowed in (pre|post)-(de|in)crement, bool\|float\|int\|string\|null given\.$#'
 		- '#^Parameter \#1 \$node \(.*\) of method .*Rule::processNode\(\) should be contravariant with parameter \$node \(PhpParser\\Node\) of method PHPStan\\Rules\\Rule::processNode\(\)$#'
 		- '#^Parameter .* of method PHPStan\\Command\\ErrorsConsoleStyle::.*\(\) should be contravariant with parameter .* of method Symfony\\Component\\Console\\Style\\(StyleInterface|SymfonyStyle)::.*()$#'
+		- '#^Return type \(array<PhpParser\\Node>\) of method PHPStan\\Parser\\(Cached|Direct)?Parser::parse\(\) should be covariant with return type \(array<PhpParser\\Node\\Stmt>|null\) of method PhpParser\\Parser::parse\(\)$#'
 		- '#Variable property access on PhpParser\\Node\.#'
 		-
 			message: '#Variable method call on PHPStan\\Reflection\\ClassReflection\.#'
@@ -28,11 +29,11 @@ parameters:
 			message: '#Variable static method call on PHPStan\\PhpDoc\\PhpDocBlock\.#'
 			path: %rootDir%/src/PhpDoc/PhpDocBlock.php
 		-
-			message: '#Anonymous function has an unused use \$container\.#'
-			path: %rootDir%/src/Command/CommandHelper.php
-		-
 			message: '#Access to constant EXTENSIONS on an unknown class PHPStan\\ExtensionInstaller\\GeneratedConfig\.#'
 			path: %rootDir%/src/Command/CommandHelper.php
+		-
+			message: '#Unreachable statement - code above always terminates\.#'
+			path: %rootDir%/tests/PHPStan/Dependency/DependencyDumperTest.php
 	reportStaticMethodSignatures: true
 	tmpDir: %rootDir%/tmp
 services:

@@ -320,7 +320,7 @@ class StatementResultTest extends \PHPStan\Testing\TestCase
 		$parser = self::getContainer()->getByType(Parser::class);
 
 		/** @var Stmt[] $stmts */
-		$stmts = $parser->parseString(sprintf('<?php %s', $code));
+		$stmts = $parser->parse(sprintf('<?php %s', $code));
 
 		/** @var NodeScopeResolver $nodeScopeResolver */
 		$nodeScopeResolver = self::getContainer()->getByType(NodeScopeResolver::class);

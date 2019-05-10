@@ -256,7 +256,12 @@ class PhpMethodReflection implements MethodReflection, DeprecatableReflection, I
 			$key = sprintf('variadic-method-%s-%s-v1', $declaringClass->getName(), $this->reflection->getName());
 			$cachedResult = $this->cache->load($key);
 			if ($cachedResult === null || !is_bool($cachedResult)) {
-				$nodes = $this->parser->parseFile($filename);
+				$contents = file_get_contents($filename);
+				if ($contents === false) {
+					throw new \PHPStan\ShouldNotHappenException();
+				}
+
+				$nodes = $this->parser->parse($contents);
 				$result = $this->callsFuncGetArgs($declaringClass, $nodes);
 				$this->cache->save($key, $result);
 				return $result;

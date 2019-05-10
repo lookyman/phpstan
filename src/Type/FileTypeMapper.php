@@ -10,6 +10,7 @@ use PHPStan\Parser\Parser;
 use PHPStan\PhpDoc\PhpDocStringResolver;
 use PHPStan\PhpDoc\ResolvedPhpDocBlock;
 use PHPStan\PhpDoc\TypeNodeResolver;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 
 class FileTypeMapper
 {
@@ -35,12 +36,16 @@ class FileTypeMapper
 	/** @var (false|callable|\PHPStan\PhpDoc\ResolvedPhpDocBlock)[][] */
 	private $inProcess = [];
 
+	/** @var \PHPStan\Reflection\Provider\ReflectionProvider */
+	private $reflectionProvider;
+
 	public function __construct(
 		Parser $phpParser,
 		PhpDocStringResolver $phpDocStringResolver,
 		Cache $cache,
 		AnonymousClassNameHelper $anonymousClassNameHelper,
-		TypeNodeResolver $typeNodeResolver
+		TypeNodeResolver $typeNodeResolver,
+		ReflectionProvider $reflectionProvider
 	)
 	{
 		$this->phpParser = $phpParser;
@@ -48,6 +53,7 @@ class FileTypeMapper
 		$this->cache = $cache;
 		$this->anonymousClassNameHelper = $anonymousClassNameHelper;
 		$this->typeNodeResolver = $typeNodeResolver;
+		$this->reflectionProvider = $reflectionProvider;
 	}
 
 	public function getResolvedPhpDoc(
@@ -161,8 +167,14 @@ class FileTypeMapper
 		}
 		$namespace = null;
 		$uses = [];
+
+		$contents = file_get_contents($fileName);
+		if ($contents === false) {
+			throw new \PHPStan\ShouldNotHappenException();
+		}
+
 		$this->processNodes(
-			$this->phpParser->parseFile($fileName),
+			$this->phpParser->parse($contents),
 			function (\PhpParser\Node $node) use ($fileName, $lookForTrait, &$phpDocMap, &$classStack, &$namespace, &$uses) {
 				if ($node instanceof Node\Stmt\ClassLike) {
 					if ($lookForTrait !== null) {
@@ -189,11 +201,11 @@ class FileTypeMapper
 				} elseif ($node instanceof Node\Stmt\TraitUse) {
 					foreach ($node->traits as $traitName) {
 						$traitName = (string) $traitName;
-						if (!trait_exists($traitName)) {
+						if (!$this->reflectionProvider->traitExists($traitName)) {
 							continue;
 						}
 
-						$traitReflection = new \ReflectionClass($traitName);
+						$traitReflection = $this->reflectionProvider->createReflectionClass($traitName);
 						if ($traitReflection->getFileName() === false) {
 							continue;
 						}

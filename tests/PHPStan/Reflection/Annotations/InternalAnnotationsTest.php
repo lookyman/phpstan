@@ -143,7 +143,7 @@ class InternalAnnotationsTest extends \PHPStan\Testing\TestCase
 
 	public function testInternalUserFunctions(): void
 	{
-		require_once __DIR__ . '/data/annotations-internal.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/annotations-internal.php');
 
 		/** @var Broker $broker */
 		$broker = self::getContainer()->getByType(Broker::class);

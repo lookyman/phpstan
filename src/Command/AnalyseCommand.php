@@ -31,6 +31,7 @@ class AnalyseCommand extends \Symfony\Component\Console\Command\Command
 				new InputOption('autoload-file', 'a', InputOption::VALUE_REQUIRED, 'Project\'s additional autoload file path'),
 				new InputOption('error-format', null, InputOption::VALUE_REQUIRED, 'Format in which to print the result of the analysis', 'table'),
 				new InputOption('memory-limit', null, InputOption::VALUE_REQUIRED, 'Memory limit for analysis'),
+				new InputOption('reflection', null, InputOption::VALUE_REQUIRED, 'Reflection backend', 'native'),
 			]);
 	}
 
@@ -58,6 +59,8 @@ class AnalyseCommand extends \Symfony\Component\Console\Command\Command
 		$configuration = $input->getOption('configuration');
 		$level = $input->getOption(self::OPTION_LEVEL);
 		$pathsFile = $input->getOption('paths-file');
+		/** @var string $reflectionBackend */
+		$reflectionBackend = $input->getOption('reflection');
 
 		if (
 			!is_array($paths)
@@ -79,7 +82,8 @@ class AnalyseCommand extends \Symfony\Component\Console\Command\Command
 				$memoryLimit,
 				$autoloadFile,
 				$configuration,
-				$level
+				$level,
+				$reflectionBackend
 			);
 		} catch (\PHPStan\Command\InceptionNotSuccessfulException $e) {
 			return 1;
