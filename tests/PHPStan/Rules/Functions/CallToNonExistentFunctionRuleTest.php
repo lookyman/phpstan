@@ -17,7 +17,7 @@ class CallToNonExistentFunctionRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testCallToExistingFunction(): void
 	{
-		require_once __DIR__ . '/data/existing-function-definition.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/existing-function-definition.php');
 		$this->analyse([__DIR__ . '/data/existing-function.php'], []);
 	}
 
@@ -43,7 +43,7 @@ class CallToNonExistentFunctionRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testCallToIncorrectCaseFunctionName(): void
 	{
-		require_once __DIR__ . '/data/incorrect-function-case-definition.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/incorrect-function-case-definition.php');
 		$this->analyse([__DIR__ . '/data/incorrect-function-case.php'], [
 			[
 				'Call to function IncorrectFunctionCase\fooBar() with incorrect case: foobar',

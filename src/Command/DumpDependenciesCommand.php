@@ -27,6 +27,7 @@ class DumpDependenciesCommand extends \Symfony\Component\Console\Command\Command
 				new InputOption('autoload-file', 'a', InputOption::VALUE_REQUIRED, 'Project\'s additional autoload file path'),
 				new InputOption('memory-limit', null, InputOption::VALUE_REQUIRED, 'Memory limit for the run'),
 				new InputOption('analysed-paths', null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Project-scope paths'),
+				new InputOption('reflection', null, InputOption::VALUE_REQUIRED, 'Reflection backend', 'native'),
 			]);
 	}
 
@@ -47,6 +48,10 @@ class DumpDependenciesCommand extends \Symfony\Component\Console\Command\Command
 
 			/** @var string|null $pathsFile */
 			$pathsFile = $input->getOption('paths-file');
+
+			/** @var string $reflectionBackend */
+			$reflectionBackend = $input->getOption('reflection');
+
 			$inceptionResult = CommandHelper::begin(
 				$input,
 				$output,
@@ -55,7 +60,8 @@ class DumpDependenciesCommand extends \Symfony\Component\Console\Command\Command
 				$memoryLimit,
 				$autoloadFile,
 				$configurationFile,
-				'0' // irrelevant but prevents an error when a config file is passed
+				'0', // irrelevant but prevents an error when a config file is passed
+				$reflectionBackend
 			);
 		} catch (\PHPStan\Command\InceptionNotSuccessfulException $e) {
 			return 1;

@@ -16,7 +16,7 @@ class ExistingClassesInTypehintsRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testExistingClassInTypehint(): void
 	{
-		require_once __DIR__ . '/data/typehints.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/typehints.php');
 		$this->analyse([__DIR__ . '/data/typehints.php'], [
 			[
 				'Return typehint of function TestFunctionTypehints\foo() has invalid type TestFunctionTypehints\NonexistentClass.',
@@ -75,7 +75,7 @@ class ExistingClassesInTypehintsRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testWithoutNamespace(): void
 	{
-		require_once __DIR__ . '/data/typehintsWithoutNamespace.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/typehintsWithoutNamespace.php');
 		$this->analyse([__DIR__ . '/data/typehintsWithoutNamespace.php'], [
 			[
 				'Return typehint of function fooWithoutNamespace() has invalid type NonexistentClass.',

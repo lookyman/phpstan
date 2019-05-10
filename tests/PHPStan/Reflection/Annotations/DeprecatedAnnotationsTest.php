@@ -143,7 +143,7 @@ class DeprecatedAnnotationsTest extends \PHPStan\Testing\TestCase
 
 	public function testDeprecatedUserFunctions(): void
 	{
-		require_once __DIR__ . '/data/annotations-deprecated.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/annotations-deprecated.php');
 
 		/** @var Broker $broker */
 		$broker = self::getContainer()->getByType(Broker::class);

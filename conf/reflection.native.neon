@@ -1,0 +1,7 @@
+services:
+	-
+		class: PHPStan\Reflection\Provider\ReflectionProvider
+		factory: PHPStan\Reflection\Provider\NativeReflectionProvider
+		arguments:
+			fileExtensions: %fileExtensions%
+			tmpDir: %tmpDir%

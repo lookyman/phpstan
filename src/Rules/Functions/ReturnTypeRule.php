@@ -8,6 +8,7 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Reflection\Php\PhpFunctionFromParserNodeReflection;
 use PHPStan\Reflection\Php\PhpMethodFromParserNodeReflection;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Rules\FunctionReturnTypeCheck;
 
 class ReturnTypeRule implements \PHPStan\Rules\Rule
@@ -16,9 +17,13 @@ class ReturnTypeRule implements \PHPStan\Rules\Rule
 	/** @var \PHPStan\Rules\FunctionReturnTypeCheck */
 	private $returnTypeCheck;
 
-	public function __construct(FunctionReturnTypeCheck $returnTypeCheck)
+	/** @var \PHPStan\Reflection\Provider\ReflectionProvider */
+	private $reflectionProvider;
+
+	public function __construct(FunctionReturnTypeCheck $returnTypeCheck, ReflectionProvider $reflectionProvider)
 	{
 		$this->returnTypeCheck = $returnTypeCheck;
+		$this->reflectionProvider = $reflectionProvider;
 	}
 
 	public function getNodeType(): string
@@ -50,8 +55,8 @@ class ReturnTypeRule implements \PHPStan\Rules\Rule
 		}
 
 		$reflection = null;
-		if (function_exists($function->getName())) {
-			$reflection = new \ReflectionFunction($function->getName());
+		if ($this->reflectionProvider->functionExists($function->getName())) {
+			$reflection = $this->reflectionProvider->createReflectionFunction($function->getName());
 		}
 
 		return $this->returnTypeCheck->checkReturnType(

@@ -66,7 +66,7 @@ class ThrowsAnnotationsTest extends \PHPStan\Testing\TestCase
 
 	public function testThrowsOnUserFunctions(): void
 	{
-		require_once __DIR__ . '/data/annotations-throws.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/annotations-throws.php');
 
 		/** @var Broker $broker */
 		$broker = self::getContainer()->getByType(Broker::class);

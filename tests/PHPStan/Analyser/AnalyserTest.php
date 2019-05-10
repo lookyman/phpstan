@@ -8,6 +8,7 @@ use PHPStan\File\FileHelper;
 use PHPStan\File\RelativePathHelper;
 use PHPStan\Parser\DirectParser;
 use PHPStan\PhpDoc\PhpDocStringResolver;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Rules\AlwaysFailRule;
 use PHPStan\Rules\Registry;
 use PHPStan\Type\FileTypeMapper;
@@ -196,7 +197,7 @@ class AnalyserTest extends \PHPStan\Testing\TestCase
 			new NodeScopeResolver(
 				$broker,
 				$this->getParser(),
-				new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, $relativePathHelper), new \PHPStan\PhpDoc\TypeNodeResolver([])),
+				new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, $relativePathHelper), new \PHPStan\PhpDoc\TypeNodeResolver([]), self::getContainer()->getByType(ReflectionProvider::class)),
 				$fileHelper,
 				$typeSpecifier,
 				false,

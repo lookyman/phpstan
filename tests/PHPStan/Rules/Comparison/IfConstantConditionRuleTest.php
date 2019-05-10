@@ -48,7 +48,7 @@ class IfConstantConditionRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testRule(): void
 	{
-		require_once __DIR__ . '/data/function-definition.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/function-definition.php');
 		$this->analyse([__DIR__ . '/data/if-condition.php'], [
 			[
 				'If condition is always true.',

@@ -45,7 +45,7 @@ class DefinedVariableRuleTest extends \PHPStan\Testing\RuleTestCase
 
 	public function testDefinedVariables(): void
 	{
-		require_once __DIR__ . '/data/defined-variables-definition.php';
+		$this->getReflectionProvider()->requireFile(__DIR__ . '/data/defined-variables-definition.php');
 		$this->cliArgumentsVariablesRegistered = true;
 		$this->polluteScopeWithLoopInitialAssignments = false;
 		$this->polluteCatchScopeWithTryAssignments = false;

@@ -5,11 +5,11 @@ namespace PHPStan\Command;
 use Nette\DI\Helpers;
 use Nette\Schema\Context as SchemaContext;
 use Nette\Schema\Processor;
-use PHPStan\DependencyInjection\Container;
 use PHPStan\DependencyInjection\ContainerFactory;
 use PHPStan\DependencyInjection\LoaderFactory;
 use PHPStan\File\FileFinder;
 use PHPStan\File\FileHelper;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Type\TypeCombinator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -29,7 +29,8 @@ class CommandHelper
 		?string $memoryLimit,
 		?string $autoloadFile,
 		?string $projectConfigFile,
-		?string $level
+		?string $level,
+		string $reflectionBackend
 	): InceptionResult
 	{
 		$errorOutput = $output instanceof ConsoleOutputInterface ? $output->getErrorOutput() : $output;
@@ -121,6 +122,14 @@ class CommandHelper
 		}
 
 		$additionalConfigFiles = [];
+
+		$reflectionConfigFile = sprintf('%s/reflection.%s.neon', $containerFactory->getConfigDirectory(), $reflectionBackend);
+		if (!is_file($reflectionConfigFile)) {
+			$errorOutput->writeln(sprintf('Reflection backend config file %s was not found', $reflectionConfigFile));
+			throw new \PHPStan\Command\InceptionNotSuccessfulException();
+		}
+		$additionalConfigFiles[] = $reflectionConfigFile;
+
 		if ($level !== null) {
 			$levelConfigFile = sprintf('%s/config.level%s.neon', $containerFactory->getConfigDirectory(), $level);
 			if (!is_file($levelConfigFile)) {
@@ -221,29 +230,22 @@ class CommandHelper
 			$defaultLevelUsed = false;
 		}
 
-		$container = $netteContainer->getByType(Container::class);
+		/** @var \PHPStan\Reflection\Provider\ReflectionProvider $reflectionProvider */
+		$reflectionProvider = $netteContainer->getByType(ReflectionProvider::class);
+
 		foreach ($netteContainer->parameters['autoload_files'] as $parameterAutoloadFile) {
-			(static function (string $file) use ($container): void {
-				require_once $file;
-			})($fileHelper->normalizePath($parameterAutoloadFile));
+			$reflectionProvider->requireFile($fileHelper->normalizePath($parameterAutoloadFile));
 		}
 
 		if (count($netteContainer->parameters['autoload_directories']) > 0) {
-			$robotLoader = new \Nette\Loaders\RobotLoader();
-			$robotLoader->acceptFiles = array_map(static function (string $extension): string {
-				return sprintf('*.%s', $extension);
-			}, $netteContainer->parameters['fileExtensions']);
-
-			$robotLoader->setTempDirectory($tmpDir);
-			foreach ($netteContainer->parameters['autoload_directories'] as $directory) {
-				$robotLoader->addDirectory($fileHelper->normalizePath($directory));
-			}
-
-			foreach ($netteContainer->parameters['excludes_analyse'] as $directory) {
-				$robotLoader->excludeDirectory($fileHelper->normalizePath($directory));
-			}
-
-			$robotLoader->register();
+			$reflectionProvider->requireDirectories(
+				array_map(static function (string $file) use ($fileHelper): string {
+					return $fileHelper->normalizePath($file);
+				}, $netteContainer->parameters['autoload_directories']),
+				array_map(static function (string $file) use ($fileHelper): string {
+					return $fileHelper->normalizePath($file);
+				}, $netteContainer->parameters['excludes_analyse'])
+			);
 		}
 
 		$bootstrapFile = $netteContainer->parameters['bootstrap'];
@@ -254,7 +256,7 @@ class CommandHelper
 				throw new \PHPStan\Command\InceptionNotSuccessfulException();
 			}
 			try {
-				(static function (string $file) use ($container): void {
+				(static function (string $file): void {
 					require_once $file;
 				})($bootstrapFile);
 			} catch (\Throwable $e) {

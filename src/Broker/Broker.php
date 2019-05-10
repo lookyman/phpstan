@@ -13,6 +13,7 @@ use PHPStan\Reflection\FunctionReflectionFactory;
 use PHPStan\Reflection\FunctionVariant;
 use PHPStan\Reflection\Native\NativeFunctionReflection;
 use PHPStan\Reflection\Native\NativeParameterReflection;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Reflection\SignatureMap\ParameterSignature;
 use PHPStan\Reflection\SignatureMap\SignatureMapProvider;
 use PHPStan\Type\BooleanType;
@@ -24,7 +25,6 @@ use PHPStan\Type\StringAlwaysAcceptingObjectWithToStringType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\UnionType;
-use ReflectionClass;
 
 class Broker
 {
@@ -62,9 +62,6 @@ class Broker
 	/** @var \PHPStan\Reflection\SignatureMap\SignatureMapProvider */
 	private $signatureMapProvider;
 
-	/** @var \PhpParser\PrettyPrinter\Standard */
-	private $printer;
-
 	/** @var AnonymousClassNameHelper */
 	private $anonymousClassNameHelper;
 
@@ -95,6 +92,9 @@ class Broker
 	/** @var \PHPStan\Reflection\ClassReflection[] */
 	private static $anonymousClasses = [];
 
+	/** @var \PHPStan\Reflection\Provider\ReflectionProvider */
+	private $reflectionProvider;
+
 	/**
 	 * @param \PHPStan\Reflection\PropertiesClassReflectionExtension[] $propertiesClassReflectionExtensions
 	 * @param \PHPStan\Reflection\MethodsClassReflectionExtension[] $methodsClassReflectionExtensions
@@ -104,7 +104,6 @@ class Broker
 	 * @param \PHPStan\Reflection\FunctionReflectionFactory $functionReflectionFactory
 	 * @param \PHPStan\Type\FileTypeMapper $fileTypeMapper
 	 * @param \PHPStan\Reflection\SignatureMap\SignatureMapProvider $signatureMapProvider
-	 * @param \PhpParser\PrettyPrinter\Standard $printer
 	 * @param AnonymousClassNameHelper $anonymousClassNameHelper
 	 * @param Parser $parser
 	 * @param RelativePathHelper $relativePathHelper
@@ -119,11 +118,11 @@ class Broker
 		FunctionReflectionFactory $functionReflectionFactory,
 		FileTypeMapper $fileTypeMapper,
 		SignatureMapProvider $signatureMapProvider,
-		\PhpParser\PrettyPrinter\Standard $printer,
 		AnonymousClassNameHelper $anonymousClassNameHelper,
 		Parser $parser,
 		RelativePathHelper $relativePathHelper,
-		array $universalObjectCratesClasses
+		array $universalObjectCratesClasses,
+		ReflectionProvider $reflectionProvider
 	)
 	{
 		$this->propertiesClassReflectionExtensions = $propertiesClassReflectionExtensions;
@@ -146,11 +145,11 @@ class Broker
 		$this->functionReflectionFactory = $functionReflectionFactory;
 		$this->fileTypeMapper = $fileTypeMapper;
 		$this->signatureMapProvider = $signatureMapProvider;
-		$this->printer = $printer;
 		$this->anonymousClassNameHelper = $anonymousClassNameHelper;
 		$this->parser = $parser;
 		$this->relativePathHelper = $relativePathHelper;
 		$this->universalObjectCratesClasses = $universalObjectCratesClasses;
+		$this->reflectionProvider = $reflectionProvider;
 	}
 
 	public static function registerInstance(Broker $broker): void
@@ -247,7 +246,7 @@ class Broker
 		}
 
 		if (!isset($this->classReflections[$className])) {
-			$reflectionClass = new ReflectionClass($className);
+			$reflectionClass = $this->reflectionProvider->createReflectionClass($className);
 			$filename = null;
 			if ($reflectionClass->getFileName() !== false) {
 				$filename = $reflectionClass->getFileName();
@@ -299,10 +298,8 @@ class Broker
 			return self::$anonymousClasses[$className];
 		}
 
-		eval($this->printer->prettyPrint([$classNode]));
-
 		self::$anonymousClasses[$className] = $this->getClassFromReflection(
-			new \ReflectionClass('\\' . $className),
+			$this->reflectionProvider->createAnonymousClassReflection($classNode, $scopeFile),
 			sprintf('class@anonymous/%s:%s', $filename, $classNode->getLine()),
 			$scopeFile
 		);
@@ -336,24 +333,7 @@ class Broker
 			return $this->hasClassCache[$className];
 		}
 
-		spl_autoload_register($autoloader = function (string $autoloadedClassName) use ($className): void {
-			if ($autoloadedClassName !== $className && !$this->isExistsCheckCall()) {
-				throw new \PHPStan\Broker\ClassAutoloadingException($autoloadedClassName);
-			}
-		});
-
-		try {
-			return $this->hasClassCache[$className] = class_exists($className) || interface_exists($className) || trait_exists($className);
-		} catch (\PHPStan\Broker\ClassAutoloadingException $e) {
-			throw $e;
-		} catch (\Throwable $t) {
-			throw new \PHPStan\Broker\ClassAutoloadingException(
-				$className,
-				$t
-			);
-		} finally {
-			spl_autoload_unregister($autoloader);
-		}
+		return $this->hasClassCache[$className] = $this->reflectionProvider->hasClass($className);
 	}
 
 	public function getFunction(\PhpParser\Node\Name $nameNode, ?Scope $scope): \PHPStan\Reflection\FunctionReflection
@@ -452,7 +432,7 @@ class Broker
 
 		/** @var string $functionName */
 		$functionName = $this->resolveFunctionName($nameNode, $scope);
-		if (!function_exists($functionName)) {
+		if (!$this->reflectionProvider->functionExists($functionName)) {
 			throw new \PHPStan\Broker\FunctionNotFoundException($functionName);
 		}
 		$lowerCasedFunctionName = strtolower($functionName);
@@ -460,7 +440,7 @@ class Broker
 			return $this->customFunctionReflections[$lowerCasedFunctionName];
 		}
 
-		$reflectionFunction = new \ReflectionFunction($functionName);
+		$reflectionFunction = $this->reflectionProvider->createReflectionFunction($functionName);
 		$phpDocParameterTags = [];
 		$phpDocReturnTag = null;
 		$phpDocThrowsTag = null;
@@ -499,7 +479,7 @@ class Broker
 	public function resolveFunctionName(\PhpParser\Node\Name $nameNode, ?Scope $scope): ?string
 	{
 		return $this->resolveName($nameNode, function (string $name): bool {
-			$exists = function_exists($name);
+			$exists = $this->reflectionProvider->functionExists($name);
 			if ($exists) {
 				return true;
 			}
@@ -563,29 +543,6 @@ class Broker
 		}
 
 		return null;
-	}
-
-	private function isExistsCheckCall(): bool
-	{
-		$debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-		$existsCallTypes = [
-			'class_exists' => true,
-			'interface_exists' => true,
-			'trait_exists' => true,
-		];
-
-		foreach ($debugBacktrace as $traceStep) {
-			if (
-				isset($traceStep['function'])
-				&& isset($existsCallTypes[$traceStep['function']])
-				// We must ignore the self::hasClass calls
-				&& (!isset($traceStep['file']) || $traceStep['file'] !== __FILE__)
-			) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 }
