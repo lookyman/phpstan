@@ -60,6 +60,7 @@ use PHPStan\PhpDoc\Tag\ParamTag;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ParametersAcceptor;
 use PHPStan\Reflection\ParametersAcceptorSelector;
+use PHPStan\Reflection\Provider\ReflectionProvider;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\ClosureType;
 use PHPStan\Type\CommentHelper;
@@ -100,6 +101,9 @@ class NodeScopeResolver
 	/** @var \PHPStan\Analyser\TypeSpecifier */
 	private $typeSpecifier;
 
+	/** @var \PHPStan\Reflection\Provider\ReflectionProvider */
+	private $reflectionProvider;
+
 	/** @var bool */
 	private $polluteScopeWithLoopInitialAssignments;
 
@@ -132,6 +136,7 @@ class NodeScopeResolver
 		FileTypeMapper $fileTypeMapper,
 		FileHelper $fileHelper,
 		TypeSpecifier $typeSpecifier,
+		ReflectionProvider $reflectionProvider,
 		bool $polluteScopeWithLoopInitialAssignments,
 		bool $polluteCatchScopeWithTryAssignments,
 		bool $polluteScopeWithAlwaysIterableForeach,
@@ -143,6 +148,7 @@ class NodeScopeResolver
 		$this->fileTypeMapper = $fileTypeMapper;
 		$this->fileHelper = $fileHelper;
 		$this->typeSpecifier = $typeSpecifier;
+		$this->reflectionProvider = $reflectionProvider;
 		$this->polluteScopeWithLoopInitialAssignments = $polluteScopeWithLoopInitialAssignments;
 		$this->polluteCatchScopeWithTryAssignments = $polluteCatchScopeWithTryAssignments;
 		$this->polluteScopeWithAlwaysIterableForeach = $polluteScopeWithAlwaysIterableForeach;
@@ -155,6 +161,7 @@ class NodeScopeResolver
 	public function setAnalysedFiles(array $files): void
 	{
 		$this->analysedFiles = array_fill_keys($files, true);
+		$this->reflectionProvider->setAnalysedFiles($files);
 	}
 
 	/**

@@ -9240,6 +9240,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class), self::getContainer()->getByType(ReflectionProvider::class)),
 			$fileHelper,
 			$typeSpecifier,
+			$this->getReflectionProvider(),
 			true,
 			$this->polluteCatchScopeWithTryAssignments,
 			true,

@@ -1,0 +1,9 @@
+services:
+	-
+		class: PHPStan\Reflection\Provider\ReflectionProvider
+		factory: PHPStan\Reflection\Provider\BetterReflectionProvider
+		arguments:
+			currentWorkingDirectory: %currentWorkingDirectory%
+
+	-
+		class: Roave\BetterReflection\SourceLocator\Ast\Locator

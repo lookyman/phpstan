@@ -61,6 +61,7 @@ abstract class RuleTestCase extends \PHPStan\Testing\TestCase
 					new FileTypeMapper($this->getParser(), self::getContainer()->getByType(PhpDocStringResolver::class), $this->createMock(Cache::class), new AnonymousClassNameHelper(new FileHelper($currentWorkingDirectory), new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), new \PHPStan\PhpDoc\TypeNodeResolver($this->getTypeNodeResolverExtensions()), self::getContainer()->getByType(ReflectionProvider::class)),
 					$fileHelper,
 					$typeSpecifier,
+					$this->getReflectionProvider(),
 					$this->shouldPolluteScopeWithLoopInitialAssignments(),
 					$this->shouldPolluteCatchScopeWithTryAssignments(),
 					$this->shouldPolluteScopeWithAlwaysIterableForeach(),

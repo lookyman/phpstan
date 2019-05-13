@@ -28,9 +28,9 @@ $autoloadProjectAutoloaderFile = function (string $file): void {
 			}
 		} else {
 			$path = dirname($pharPath) . $file;
-        	if (is_file($path)) {
-        		require_once $path;
-        	}
+			if (is_file($path)) {
+				require_once $path;
+			}
 		}
 	}
 };

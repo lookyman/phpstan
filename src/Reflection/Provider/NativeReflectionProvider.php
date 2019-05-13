@@ -122,6 +122,14 @@ class NativeReflectionProvider implements ReflectionProvider
 		return trait_exists($name);
 	}
 
+	/**
+	 * @param string[] $files
+	 */
+	public function setAnalysedFiles(array $files): void
+	{
+		// noop
+	}
+
 	private function isExistsCheckCall(): bool
 	{
 		$debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);

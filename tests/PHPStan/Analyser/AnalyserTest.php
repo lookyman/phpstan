@@ -200,6 +200,7 @@ class AnalyserTest extends \PHPStan\Testing\TestCase
 				new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, $relativePathHelper), new \PHPStan\PhpDoc\TypeNodeResolver([]), self::getContainer()->getByType(ReflectionProvider::class)),
 				$fileHelper,
 				$typeSpecifier,
+				$this->getReflectionProvider(),
 				false,
 				false,
 				true,
