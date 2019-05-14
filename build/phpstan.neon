@@ -21,6 +21,7 @@ parameters:
 		- '#^Parameter \#1 \$node \(.*\) of method .*Rule::processNode\(\) should be contravariant with parameter \$node \(PhpParser\\Node\) of method PHPStan\\Rules\\Rule::processNode\(\)$#'
 		- '#^Parameter .* of method PHPStan\\Command\\ErrorsConsoleStyle::.*\(\) should be contravariant with parameter .* of method Symfony\\Component\\Console\\Style\\(StyleInterface|SymfonyStyle)::.*()$#'
 		- '#Variable property access on PhpParser\\Node\.#'
+		- '#^Return type \(array<PhpParser\\Node>\) of method PHPStan\\Parser\\(Cached|Direct)?Parser::parse\(\) should be covariant with return type \(array<PhpParser\\Node\Stmt>|null\) of method PhpParser\\Parser::parse\(\)$#'
 		-
 			message: '#Variable method call on PHPStan\\Reflection\\ClassReflection\.#'
 			path: %rootDir%/src/PhpDoc/PhpDocBlock.php
@@ -33,6 +34,9 @@ parameters:
 		-
 			message: '#Variable (?:static )?method call#'
 			path: %rootDir%/src/DependencyInjection/ParametersSchemaExtension.php
+		- # TODO REMOVE ME
+			message: '#Unreachable statement - code above always terminates\.#'
+			path: %rootDir%/tests/PHPStan/Dependency/DependencyDumperTest.php
 	reportStaticMethodSignatures: true
 	tmpDir: %rootDir%/tmp
 services:

@@ -9172,7 +9172,7 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 	{
 		$assertType = function (Scope $scope) use ($expression, $description, $evaluatedPointExpression): void {
 			/** @var \PhpParser\Node\Stmt\Expression $expressionNode */
-			$expressionNode = $this->getParser()->parseString(sprintf('<?php %s;', $expression))[0];
+			$expressionNode = $this->getParser()->parse(sprintf('<?php %s;', $expression))[0];
 			$type = $scope->getType($expressionNode->expr);
 			$this->assertTypeDescribe(
 				$description,
@@ -9240,7 +9240,6 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 			new FileTypeMapper($this->getParser(), $phpDocStringResolver, $this->createMock(Cache::class), new AnonymousClassNameHelper($fileHelper, new FuzzyRelativePathHelper($currentWorkingDirectory, DIRECTORY_SEPARATOR, [])), self::getContainer()->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class), self::getContainer()->getByType(ReflectionProvider::class)),
 			$fileHelper,
 			$typeSpecifier,
-			$this->getReflectionProvider(),
 			true,
 			$this->polluteCatchScopeWithTryAssignments,
 			true,
@@ -9259,8 +9258,12 @@ class NodeScopeResolverTest extends \PHPStan\Testing\TestCase
 			__DIR__ . '/data/anonymous-class-name-in-trait-trait.php',
 		]));
 
+		$contents = file_get_contents($file);
+		if ($contents === false) {
+			throw new \PHPStan\ShouldNotHappenException();
+		}
 		$resolver->processNodes(
-			$this->getParser()->parseFile($file),
+			$this->getParser()->parse($contents),
 			$this->createScopeFactory($broker, $typeSpecifier, $dynamicConstantNames)->create(ScopeContext::create($file)),
 			$callback
 		);

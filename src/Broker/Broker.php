@@ -508,7 +508,11 @@ class Broker
 
 	private function fileHasCompilerHaltStatementCalls(string $pathToFile): bool
 	{
-		$nodes = $this->parser->parseFile($pathToFile);
+		$contents = file_get_contents($pathToFile);
+		if ($contents === false) {
+			throw new \PHPStan\ShouldNotHappenException();
+		}
+		$nodes = $this->parser->parse($contents);
 		foreach ($nodes as $node) {
 			if ($node instanceof Node\Stmt\HaltCompiler) {
 				return true;

@@ -167,8 +167,13 @@ class FileTypeMapper
 		}
 		$namespace = null;
 		$uses = [];
+
+		$contents = file_get_contents($fileName);
+		if ($contents === false) {
+			throw new \PHPStan\ShouldNotHappenException();
+		}
 		$this->processNodes(
-			$this->phpParser->parseFile($fileName),
+			$this->phpParser->parse($contents),
 			function (\PhpParser\Node $node) use ($fileName, $lookForTrait, &$phpDocMap, &$classStack, &$namespace, &$uses) {
 				if ($node instanceof Node\Stmt\ClassLike) {
 					if ($lookForTrait !== null) {

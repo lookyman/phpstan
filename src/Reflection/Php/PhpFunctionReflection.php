@@ -149,7 +149,11 @@ class PhpFunctionReflection implements FunctionReflection, ReflectionWithFilenam
 			$key = sprintf('variadic-function-%s-v0', $this->reflection->getName());
 			$cachedResult = $this->cache->load($key);
 			if ($cachedResult === null) {
-				$nodes = $this->parser->parseFile($this->reflection->getFileName());
+				$contents = file_get_contents($this->reflection->getFileName());
+				if ($contents === false) {
+					throw new \PHPStan\ShouldNotHappenException();
+				}
+				$nodes = $this->parser->parse($contents);
 				$result = $this->callsFuncGetArgs($nodes);
 				$this->cache->save($key, $result);
 				return $result;

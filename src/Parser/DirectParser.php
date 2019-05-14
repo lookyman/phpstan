@@ -2,6 +2,7 @@
 
 namespace PHPStan\Parser;
 
+use PhpParser\ErrorHandler;
 use PhpParser\ErrorHandler\Collecting;
 use PhpParser\NodeTraverser;
 
@@ -21,26 +22,13 @@ class DirectParser implements Parser
 	}
 
 	/**
-	 * @param string $file path to a file to parse
+	 * @param string $code
 	 * @return \PhpParser\Node[]
 	 */
-	public function parseFile(string $file): array
-	{
-		$contents = file_get_contents($file);
-		if ($contents === false) {
-			throw new \PHPStan\ShouldNotHappenException();
-		}
-		return $this->parseString($contents);
-	}
-
-	/**
-	 * @param string $sourceCode
-	 * @return \PhpParser\Node[]
-	 */
-	public function parseString(string $sourceCode): array
+	public function parse(string $code, ?ErrorHandler $errorHandler = null): array
 	{
 		$errorHandler = new Collecting();
-		$nodes = $this->parser->parse($sourceCode, $errorHandler);
+		$nodes = $this->parser->parse($code, $errorHandler);
 		if ($errorHandler->hasErrors()) {
 			throw new \PHPStan\Parser\ParserErrorsException($errorHandler->getErrors());
 		}

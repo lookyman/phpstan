@@ -123,16 +123,6 @@ class BetterReflectionProvider implements ReflectionProvider
 		return $this->classExists($name);
 	}
 
-	/**
-	 * @param string[] $files
-	 */
-	public function setAnalysedFiles(array $files): void
-	{
-		foreach ($files as $file) {
-			$this->requireFile($file);
-		}
-	}
-
 	private function getClassReflector(): ClassReflector
 	{
 		if ($this->classReflector === null) {

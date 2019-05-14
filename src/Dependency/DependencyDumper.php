@@ -73,7 +73,11 @@ class DependencyDumper
 		$countCallback(count($files));
 		foreach ($files as $file) {
 			try {
-				$parserNodes = $this->parser->parseFile($file);
+				$contents = file_get_contents($file);
+				if ($contents === false) {
+					throw new \PHPStan\ShouldNotHappenException();
+				}
+				$parserNodes = $this->parser->parse($contents);
 			} catch (\PHPStan\Parser\ParserErrorsException $e) {
 				continue;
 			}

@@ -33,9 +33,4 @@ interface ReflectionProvider
 
 	public function traitExists(string $name): bool;
 
-	/**
-	 * @param string[] $files
-	 */
-	public function setAnalysedFiles(array $files): void;
-
 }
